@@ -1,0 +1,295 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>XDHub – Get Your Key</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; font-family: system-ui, -apple-system, sans-serif; }
+        body { min-height: 100vh; display: flex; justify-content: center; align-items: center; background: #0b0b20; padding: 20px; }
+        .card { background: #18182e; border-radius: 24px; padding: 36px 32px; max-width: 420px; width: 100%; border: 1px solid #2a2a4a; box-shadow: 0 20px 60px rgba(0,0,0,0.6); }
+        .title { color: #fff; font-size: 26px; font-weight: 600; text-align: center; }
+        .title span { color: #6a8aff; }
+        .sub { color: #8899bb; text-align: center; font-size: 14px; margin: 6px 0 24px; }
+        .key-box { background: #0f0f22; border-radius: 16px; padding: 20px; margin: 20px 0; border: 1px solid #2a2a4a; min-height: 70px; display: flex; align-items: center; justify-content: center; font-size: 22px; font-family: monospace; color: #b0c8ff; word-break: break-all; text-align: center; transition: 0.2s; }
+        .key-box.has-key { border-color: #2ecc71; }
+        .key-box .placeholder { color: #445566; font-size: 15px; font-family: system-ui; }
+        .btn-group { display: flex; gap: 10px; }
+        .btn { flex: 1; padding: 14px; border: none; border-radius: 14px; font-size: 16px; font-weight: 600; cursor: pointer; transition: 0.2s; background: #2a2a4a; color: #fff; }
+        .btn-primary { background: #6a8aff; color: #fff; }
+        .btn-primary:hover:not(:disabled) { background: #5a7aff; transform: scale(1.02); }
+        .btn-primary:disabled { opacity: 0.5; cursor: not-allowed; transform: none; }
+        .btn-copy { background: #2a2a4a; flex: 0.5; }
+        .btn-copy:hover:not(:disabled) { background: #3a3a5a; }
+        .btn-copy:disabled { opacity: 0.3; cursor: not-allowed; }
+        .status { text-align: center; font-size: 14px; margin-top: 14px; min-height: 22px; color: #8899bb; }
+        .status.success { color: #2ecc71; }
+        .status.info { color: #f59e0b; }
+        .status.error { color: #ef4444; }
+        .counter { text-align: center; color: #445566; font-size: 13px; margin-top: 12px; }
+        .footer { text-align: center; color: #334455; font-size: 12px; margin-top: 20px; border-top: 1px solid #1a1a3a; padding-top: 16px; }
+    </style>
+</head>
+<body>
+    <div class="card">
+        <div class="title">🔑 Get Your <span>Key</span></div>
+        <div class="sub">One key per session · auto‑reset</div>
+
+        <div class="key-box" id="keyDisplay">
+            <span class="placeholder">Click "Get Key" to generate</span>
+        </div>
+
+        <div class="btn-group">
+            <button class="btn btn-primary" id="getBtn">Get Key</button>
+            <button class="btn btn-copy" id="copyBtn" disabled>Copy</button>
+        </div>
+
+        <div class="status" id="statusMsg"></div>
+        <div class="counter" id="counter">Available: 500 · Used: 0</div>
+        <div class="footer">XDHub · Key System</div>
+    </div>
+
+    <script>
+        const ALL_KEYS = [
+            "XD-7F9K-2M4P-8Q1R","XD-A3B4-C5D6-E7F8","XD-1Z2Y-3X4W-5V6U","XD-P9Q8-R7S6-T5U4",
+            "XD-N3M4-O5P6-Q7R8","XD-L9K8-J7H6-G5F4","XD-D3E4-F5G6-H7I8","XD-B1C2-D3E4-F5G6",
+            "XD-Z9Y8-X7W6-V5U4","XD-T3S4-R5Q6-P7O8","XD-N8M7-L6K5-J4I3","XD-H2G3-F4D5-S6A7",
+            "XD-Q8W9-E7R6-T5Y4","XD-U3I4-O5P6-A7S8","XD-F9D8-S7A6-G5H4","XD-J3K4-L5Z6-X7C8",
+            "XD-V9B8-N7M6-Q5W4","XD-E3R4-T5Y6-U7I8","XD-O9P8-A7S6-D5F4","XD-G3H4-J5K6-L7Z8",
+            "XD-X9C8-V7B6-N5M4","XD-Q3W4-E5R6-T7Y8","XD-U9I8-O7P6-A5S4","XD-D3F4-G5H6-J7K8",
+            "XD-L9Z8-X7C6-V5B4","XD-N3M4-Q5W6-E7R8","XD-T9Y8-U7I6-O5P4","XD-A3S4-D5F6-G7H8",
+            "XD-J9K8-L7Z6-X5C4","XD-V3B4-N5M6-Q7W8","XD-E9R8-T7Y6-U5I4","XD-O3P4-A5S6-D7F8",
+            "XD-G9H8-J7K6-L5Z4","XD-X3C4-V5B6-N7M8","XD-Q9W8-E7R6-T5Y4","XD-U3I4-O5P6-A7S8",
+            "XD-F9D8-S7A6-G5H4","XD-J3K4-L5Z6-X7C8","XD-V9B8-N7M6-Q5W4","XD-E3R4-T5Y6-U7I8",
+            "XD-O9P8-A7S6-D5F4","XD-G3H4-J5K6-L7Z8","XD-X9C8-V7B6-N5M4","XD-Q3W4-E5R6-T7Y8",
+            "XD-U9I8-O7P6-A5S4","XD-D3F4-G5H6-J7K8","XD-L9Z8-X7C6-V5B4","XD-N3M4-Q5W6-E7R8",
+            "XD-T9Y8-U7I6-O5P4","XD-A3S4-D5F6-G7H8","XD-J9K8-L7Z6-X5C4","XD-V3B4-N5M6-Q7W8",
+            "XD-E9R8-T7Y6-U5I4","XD-O3P4-A5S6-D7F8","XD-G9H8-J7K6-L5Z4","XD-X3C4-V5B6-N7M8",
+            "XD-Q9W8-E7R6-T5Y4","XD-U3I4-O5P6-A7S8","XD-F9D8-S7A6-G5H4","XD-J3K4-L5Z6-X7C8",
+            "XD-V9B8-N7M6-Q5W4","XD-E3R4-T5Y6-U7I8","XD-O9P8-A7S6-D5F4","XD-G3H4-J5K6-L7Z8",
+            "XD-X9C8-V7B6-N5M4","XD-Q3W4-E5R6-T7Y8","XD-U9I8-O7P6-A5S4","XD-D3F4-G5H6-J7K8",
+            "XD-L9Z8-X7C6-V5B4","XD-N3M4-Q5W6-E7R8","XD-T9Y8-U7I6-O5P4","XD-A3S4-D5F6-G7H8",
+            "XD-J9K8-L7Z6-X5C4","XD-V3B4-N5M6-Q7W8","XD-E9R8-T7Y6-U5I4","XD-O3P4-A5S6-D7F8",
+            "XD-G9H8-J7K6-L5Z4","XD-X3C4-V5B6-N7M8","XD-Q9W8-E7R6-T5Y4","XD-U3I4-O5P6-A7S8",
+            "XD-F9D8-S7A6-G5H4","XD-J3K4-L5Z6-X7C8","XD-V9B8-N7M6-Q5W4","XD-E3R4-T5Y6-U7I8",
+            "XD-O9P8-A7S6-D5F4","XD-G3H4-J5K6-L7Z8","XD-X9C8-V7B6-N5M4","XD-Q3W4-E5R6-T7Y8",
+            "XD-U9I8-O7P6-A5S4","XD-D3F4-G5H6-J7K8","XD-L9Z8-X7C6-V5B4","XD-N3M4-Q5W6-E7R8",
+            "XD-T9Y8-U7I6-O5P4","XD-A3S4-D5F6-G7H8","XD-J9K8-L7Z6-X5C4","XD-V3B4-N5M6-Q7W8",
+            "XD-E9R8-T7Y6-U5I4","XD-O3P4-A5S6-D7F8","XD-G9H8-J7K6-L5Z4","XD-X3C4-V5B6-N7M8",
+            "XD-Q9W8-E7R6-T5Y4","XD-U3I4-O5P6-A7S8","XD-F9D8-S7A6-G5H4","XD-J3K4-L5Z6-X7C8",
+            "XD-V9B8-N7M6-Q5W4","XD-E3R4-T5Y6-U7I8","XD-O9P8-A7S6-D5F4","XD-G3H4-J5K6-L7Z8",
+            "XD-X9C8-V7B6-N5M4","XD-Q3W4-E5R6-T7Y8","XD-U9I8-O7P6-A5S4","XD-D3F4-G5H6-J7K8",
+            "XD-L9Z8-X7C6-V5B4","XD-N3M4-Q5W6-E7R8","XD-T9Y8-U7I6-O5P4","XD-A3S4-D5F6-G7H8",
+            "XD-J9K8-L7Z6-X5C4","XD-V3B4-N5M6-Q7W8","XD-E9R8-T7Y6-U5I4","XD-O3P4-A5S6-D7F8",
+            "XD-G9H8-J7K6-L5Z4","XD-X3C4-V5B6-N7M8","XD-Q9W8-E7R6-T5Y4","XD-U3I4-O5P6-A7S8",
+            "XD-F9D8-S7A6-G5H4","XD-J3K4-L5Z6-X7C8","XD-V9B8-N7M6-Q5W4","XD-E3R4-T5Y6-U7I8",
+            "XD-O9P8-A7S6-D5F4","XD-G3H4-J5K6-L7Z8","XD-X9C8-V7B6-N5M4","XD-Q3W4-E5R6-T7Y8",
+            "XD-U9I8-O7P6-A5S4","XD-D3F4-G5H6-J7K8","XD-L9Z8-X7C6-V5B4","XD-N3M4-Q5W6-E7R8",
+            "XD-T9Y8-U7I6-O5P4","XD-A3S4-D5F6-G7H8","XD-J9K8-L7Z6-X5C4","XD-V3B4-N5M6-Q7W8",
+            "XD-E9R8-T7Y6-U5I4","XD-O3P4-A5S6-D7F8","XD-G9H8-J7K6-L5Z4","XD-X3C4-V5B6-N7M8",
+            "XD-Q9W8-E7R6-T5Y4","XD-U3I4-O5P6-A7S8","XD-F9D8-S7A6-G5H4","XD-J3K4-L5Z6-X7C8",
+            "XD-V9B8-N7M6-Q5W4","XD-E3R4-T5Y6-U7I8","XD-O9P8-A7S6-D5F4","XD-G3H4-J5K6-L7Z8",
+            "XD-X9C8-V7B6-N5M4","XD-Q3W4-E5R6-T7Y8","XD-U9I8-O7P6-A5S4","XD-D3F4-G5H6-J7K8",
+            "XD-L9Z8-X7C6-V5B4","XD-N3M4-Q5W6-E7R8","XD-T9Y8-U7I6-O5P4","XD-A3S4-D5F6-G7H8",
+            "XD-J9K8-L7Z6-X5C4","XD-V3B4-N5M6-Q7W8","XD-E9R8-T7Y6-U5I4","XD-O3P4-A5S6-D7F8",
+            "XD-G9H8-J7K6-L5Z4","XD-X3C4-V5B6-N7M8","XD-Q9W8-E7R6-T5Y4","XD-U3I4-O5P6-A7S8",
+            "XD-F9D8-S7A6-G5H4","XD-J3K4-L5Z6-X7C8","XD-V9B8-N7M6-Q5W4","XD-E3R4-T5Y6-U7I8",
+            "XD-O9P8-A7S6-D5F4","XD-G3H4-J5K6-L7Z8","XD-X9C8-V7B6-N5M4","XD-Q3W4-E5R6-T7Y8",
+            "XD-U9I8-O7P6-A5S4","XD-D3F4-G5H6-J7K8","XD-L9Z8-X7C6-V5B4","XD-N3M4-Q5W6-E7R8",
+            "XD-T9Y8-U7I6-O5P4","XD-A3S4-D5F6-G7H8","XD-J9K8-L7Z6-X5C4","XD-V3B4-N5M6-Q7W8",
+            "XD-E9R8-T7Y6-U5I4","XD-O3P4-A5S6-D7F8","XD-G9H8-J7K6-L5Z4","XD-X3C4-V5B6-N7M8"
+        ];
+
+        const STORAGE_KEY = 'xdhub_keys';
+
+        function loadKeys() {
+            try {
+                const data = localStorage.getItem(STORAGE_KEY);
+                if (data) {
+                    const parsed = JSON.parse(data);
+                    if (Array.isArray(parsed) && parsed.length > 0) return parsed;
+                }
+            } catch (e) {}
+            const keys = ALL_KEYS.map(k => ({ key: k, status: 'available', issuedTo: null, issuedAt: null }));
+            saveKeys(keys);
+            return keys;
+        }
+
+        function saveKeys(keys) {
+            localStorage.setItem(STORAGE_KEY, JSON.stringify(keys));
+        }
+
+        function autoResetUsedToAvailable() {
+            const keys = loadKeys();
+            let changed = false;
+            for (let i = 0; i < keys.length; i++) {
+                if (keys[i].status === 'used') {
+                    keys[i].status = 'available';
+                    keys[i].issuedTo = null;
+                    keys[i].issuedAt = null;
+                    changed = true;
+                }
+            }
+            if (changed) {
+                saveKeys(keys);
+                return true;
+            }
+            return false;
+        }
+
+        function ensureAvailable() {
+            let keys = loadKeys();
+            const avail = keys.filter(k => k.status === 'available');
+            if (avail.length === 0) {
+                autoResetUsedToAvailable();
+                keys = loadKeys();
+            }
+            return keys;
+        }
+
+        // Session
+        function hasKeyInSession() {
+            return sessionStorage.getItem('xdhub_key_granted') === 'true';
+        }
+
+        function getLastKey() {
+            return sessionStorage.getItem('xdhub_lastKey');
+        }
+
+        function setGranted(key) {
+            sessionStorage.setItem('xdhub_key_granted', 'true');
+            sessionStorage.setItem('xdhub_lastKey', key);
+        }
+
+        // UI elements
+        const display = document.getElementById('keyDisplay');
+        const statusMsg = document.getElementById('statusMsg');
+        const counter = document.getElementById('counter');
+        const getBtn = document.getElementById('getBtn');
+        const copyBtn = document.getElementById('copyBtn');
+
+        function updateUI(key, message, type) {
+            if (key) {
+                display.textContent = key;
+                display.className = 'key-box has-key';
+                copyBtn.disabled = false;
+            } else {
+                display.innerHTML = '<span class="placeholder">Click "Get Key" to generate</span>';
+                display.className = 'key-box';
+                copyBtn.disabled = true;
+            }
+            if (message) {
+                statusMsg.textContent = message;
+                statusMsg.className = 'status ' + type;
+            } else {
+                statusMsg.textContent = '';
+                statusMsg.className = 'status';
+            }
+            updateCounter();
+        }
+
+        function updateCounter() {
+            const keys = loadKeys();
+            const total = keys.length;
+            const available = keys.filter(k => k.status === 'available').length;
+            const used = keys.filter(k => k.status === 'used').length;
+            counter.textContent = `Available: ${available} · Used: ${used} · Total: ${total}`;
+        }
+
+        function requestKey() {
+            let keys = ensureAvailable();
+
+            if (hasKeyInSession()) {
+                const lastKey = getLastKey();
+                if (lastKey) {
+                    updateUI(lastKey, 'ℹ️ You already have a key. Copy it above.', 'info');
+                    getBtn.disabled = true;
+                    return;
+                } else {
+                    sessionStorage.removeItem('xdhub_key_granted');
+                }
+            }
+
+            let index = -1;
+            for (let i = 0; i < keys.length; i++) {
+                if (keys[i].status === 'available') {
+                    index = i;
+                    break;
+                }
+            }
+
+            if (index === -1) {
+                autoResetUsedToAvailable();
+                keys = loadKeys();
+                for (let i = 0; i < keys.length; i++) {
+                    if (keys[i].status === 'available') {
+                        index = i;
+                        break;
+                    }
+                }
+            }
+
+            if (index === -1) {
+                updateUI(null, '❌ No keys available. Please contact admin.', 'error');
+                return;
+            }
+
+            keys[index].status = 'used';
+            keys[index].issuedTo = 'User';
+            keys[index].issuedAt = new Date().toISOString();
+            saveKeys(keys);
+
+            const key = keys[index].key;
+            setGranted(key);
+            updateUI(key, '✅ Key generated! Copy it.', 'success');
+            getBtn.disabled = true;
+        }
+
+        function copyKey() {
+            const key = display.textContent;
+            if (!key || key.includes('placeholder')) {
+                statusMsg.textContent = '⚠️ Generate a key first!';
+                statusMsg.className = 'status error';
+                return;
+            }
+            if (navigator.clipboard && navigator.clipboard.writeText) {
+                navigator.clipboard.writeText(key).then(() => {
+                    statusMsg.textContent = '📋 Copied!';
+                    statusMsg.className = 'status success';
+                }).catch(() => fallbackCopy(key));
+            } else {
+                fallbackCopy(key);
+            }
+        }
+
+        function fallbackCopy(text) {
+            const ta = document.createElement('textarea');
+            ta.value = text;
+            ta.style.position = 'fixed';
+            ta.style.opacity = '0';
+            document.body.appendChild(ta);
+            ta.select();
+            document.execCommand('copy');
+            document.body.removeChild(ta);
+            statusMsg.textContent = '📋 Copied!';
+            statusMsg.className = 'status success';
+        }
+
+        (function init() {
+            if (hasKeyInSession()) {
+                const lastKey = getLastKey();
+                if (lastKey) {
+                    updateUI(lastKey, 'ℹ️ You already have a key. Copy it above.', 'info');
+                    getBtn.disabled = true;
+                } else {
+                    sessionStorage.removeItem('xdhub_key_granted');
+                }
+            }
+            updateCounter();
+        })();
+
+        getBtn.addEventListener('click', requestKey);
+        copyBtn.addEventListener('click', copyKey);
+    </script>
+</body>
+</html>
